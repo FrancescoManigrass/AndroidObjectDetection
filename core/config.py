@@ -18,6 +18,7 @@ __C.YOLO.CLASSES              = "./core/classes/obj.names"
 __C.YOLO.ANCHORS              = "./core/anchors/yolov4_anchors.txt"
 __C.YOLO.ANCHORS_V3           = "./core/anchors/yolov3_anchors.txt"
 __C.YOLO.ANCHORS_TINY         = "./core/anchors/basline_tiny_anchors.txt"
+__C.YOLO.WEIGHTS         = "./data/yolov4-obj_26000.weights"
 __C.YOLO.STRIDES              = [8, 16, 32]
 __C.YOLO.STRIDES_TINY         = [16, 32]
 __C.YOLO.XYSCALE              = [1.2, 1.1, 1.05]
