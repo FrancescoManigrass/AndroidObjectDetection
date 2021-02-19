@@ -54,8 +54,8 @@ def main(_argv):
     #if os.path.exists(cfg.TEST.GT_IMAGE_PATH): shutil.rmtree(cfg.TEST.GT_IMAGE_PATH)
     if os.path.exists(images_dir_path): shutil.rmtree(images_dir_path)
 
-    os.mkdir(predicted_dir_path)
-    os.mkdir(ground_truth_dir_path)
+    os.makedirs(predicted_dir_path)
+    os.makedirs(ground_truth_dir_path)
     #cfg.TEST.DECTECTED_IMAGE_PATH=cfg.TEST.DECTECTED_IMAGE_PATH +  cfg.TEST.SCORE_THRESHOLD.__str__()
     #cfg.TEST.GT_IMAGE_PATH=cfg.TEST.GT_IMAGE_PATH + cfg.TEST.SCORE_THRESHOLD.__str__()
     if not os.path.exists(cfg.TEST.DECTECTED_IMAGE_PATH):
