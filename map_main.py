@@ -38,8 +38,9 @@ thresholds = [0.5]
 thresholds = [cfg.TEST.DIOU_THRESHOLD]
 first_path = args.output
 one_class = True
-
-colors={"fp":(255,255,0),"tp":(0,128,0),"tn":(72,61,139),"fn":(0,0,0)}
+#255,0,0 red
+# green 47,255,173
+colors={"fp":(0,0,255),"tp":(47,255,173),"tn":(72,61,139),"fn":(0,0,0)}
 
 for thresh1 in thresholds:
     MINOVERLAP=thresh1
@@ -451,7 +452,7 @@ for thresh1 in thresholds:
             file_id = txt_file.split(".txt", 1)[0]
             file_id = os.path.basename(os.path.normpath(file_id))
             path_image = join("data/obj/combined", os.path.basename(txt_file).replace(".txt", ".jpg"))
-            board = cv2.imread(path_image)
+            #board = cv2.imread(path_image)
             if class_index == 0:
                 if not os.path.exists('mAP/ground-truth/' + file_id + ".txt"):
                     error_msg = "Error. File not found: ground-truth/" + file_id + ".txt\n"
@@ -461,6 +462,10 @@ for thresh1 in thresholds:
             for line in lines:
                 try:
                     tmp_class_name, confidence, left, top, right, bottom = line.split()
+
+                    if float(confidence) < cfg.TEST.SCORE_THRESHOLD:
+                        continue
+
                     if one_class:
                         tmp_class_name = "noclass"
                     """
@@ -604,10 +609,6 @@ for thresh1 in thresholds:
                             gt_match["used"] = True
                             count_true_positives[class_name] += 1
                             tp_bb.append(predictions_data[idx])
-
-
-
-
                             # update the ".json" file
                             with open(gt_file, 'w') as f:
                                 f.write(json.dumps(ground_truth_data))
@@ -682,9 +683,9 @@ for thresh1 in thresholds:
                     # save image to results
                     output_img_path = results_files_path + "/images/single_predictions/" + class_name + "_prediction" + str(
                         idx) + ".jpg"
-                    cv2.imwrite(output_img_path, img)
+                    #cv2.imwrite(output_img_path, img)
                     # save the image with all the objects drawn to it
-                    cv2.imwrite(img_cumulative_path, img_cumulative)
+                    #cv2.imwrite(img_cumulative_path, img_cumulative)
 
             for pred in [os.path.basename(f).replace(".txt","") for f in ground_truth_files_list]:
                 print("dfd")
@@ -693,12 +694,12 @@ for thresh1 in thresholds:
                 if not os.path.exists(path_image_performance):
                     os.makedirs(path_image_performance)
                 img_performance = cv2.imread("data/obj/combined/"+pred+".jpg")
-                for bb1 in [tp2['bbox'] for tp2 in tp_bb]:
+                for bb1 in [tp2['bbox'] for tp2 in tp_bb if tp2['file_id']==pred]:
                     bb2 = [int(x) for x in bb1.split()]
 
                     #print(bb1.__str__())
                     cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])), (int(bb2[2]), int(bb2[3])), colors['tp'], 2)
-                for bb1 in [tp2['bbox'] for tp2 in fp_bb]:
+                for bb1 in [tp2['bbox'] for tp2 in fp_bb if tp2['file_id']==pred]:
                     bb2 = [float(x) for x in bb1.split()]
                     cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])), (int(bb2[2]), int(bb2[3])), colors['fp'], 2)
 
