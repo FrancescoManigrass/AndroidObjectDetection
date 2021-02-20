@@ -400,7 +400,7 @@ for thresh1 in thresholds:
                     # if class didn't exist yet
                     gt_counter_per_class[class_name] = 1
         # dump bounding_boxes into a ".json" file
-        cv2.imwrite("gt_images/" + os.path.basename(txt_file).replace(".txt", ".jpg"), board)
+        #cv2.imwrite("gt_images/" + os.path.basename(txt_file).replace(".txt", ".jpg"), board)
         with open(tmp_files_path + "/" + file_id + "_ground_truth.json", 'w') as outfile:
             json.dump(bounding_boxes, outfile)
 
@@ -696,7 +696,7 @@ for thresh1 in thresholds:
                 for bb1 in [tp2['bbox'] for tp2 in tp_bb]:
                     bb2 = [int(x) for x in bb1.split()]
 
-                    print(bb1.__str__())
+                    #print(bb1.__str__())
                     cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])), (int(bb2[2]), int(bb2[3])), colors['tp'], 2)
                 for bb1 in [tp2['bbox'] for tp2 in fp_bb]:
                     bb2 = [float(x) for x in bb1.split()]
