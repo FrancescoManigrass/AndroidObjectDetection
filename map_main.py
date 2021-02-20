@@ -692,7 +692,7 @@ for thresh1 in thresholds:
 
                 if not os.path.exists(path_image_performance):
                     os.makedirs(path_image_performance)
-                img_performance = cv2.imread(path_image)
+                img_performance = cv2.imread("data/obj/combined/"+pred+".jpg")
                 for bb1 in [tp2['bbox'] for tp2 in tp_bb]:
                     bb2 = [int(x) for x in bb1.split()]
 
