@@ -1,3 +1,5 @@
+import argparse
+
 from absl import app, flags, logging
 from absl.flags import FLAGS
 import cv2
@@ -14,8 +16,14 @@ from os.path import join
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-w', '--weights',  type=str,help="weights path")
+parser.add_argument('-m', '--method',required=True,type=str,  help="diou or iou")
 
-flags.DEFINE_string('weights', cfg.YOLO.WEIGHTS,
+args = parser.parse_args()
+
+
+flags.DEFINE_string('weights', args.weights,
                     'path to weights file')
 flags.DEFINE_string('framework', 'tf', 'select model type in (tf, tflite)'
                     'path to weights file')
@@ -26,10 +34,6 @@ flags.DEFINE_string('annotation_path', cfg.TEST.ANNOT_PATH, 'annotation path')
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 #flags.DEFINE_float('thresh', 0.0, 'write image path')
 
-
-
-
-
 one_class=cfg.TEST.Oneclass
 print_image=cfg.TEST.PrintImage
 
@@ -37,6 +41,7 @@ def main(_argv):
     #cfg.TEST.SCORE_THRESHOLD=FLAGS.thresh
     print(cfg.TEST.SCORE_THRESHOLD.__str__())
     INPUT_SIZE = FLAGS.size
+    #cfg.TEST.IntersectionMethod=args.method
     if FLAGS.tiny:
         STRIDES = np.array(cfg.YOLO.STRIDES_TINY)
         ANCHORS = utils.get_anchors(cfg.YOLO.ANCHORS_TINY, FLAGS.tiny)

@@ -20,7 +20,7 @@ from ciou import computeDiou
 
  # default value (defined in the PASCAL VOC2012 challenge)
 #MaxCentroideDistance = cfg.TEST.MaxCentroideDistance
-IntersectionMethod = cfg.TEST.IntersectionMethod
+
 # IntersectionMethod="iou"
 
 parser = argparse.ArgumentParser()
@@ -32,7 +32,10 @@ parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list o
 parser.add_argument('-o', '--output', default="results_no_opencv_no_web_view", type=str, help="output path name")
 # argparse receiving list of classes with specific IoU
 parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
+parser.add_argument('-m', '--intersectionMethod',  help="diou or iou", action="store_true")
 args = parser.parse_args()
+
+IntersectionMethod = args.intersectionMethod
 
 thresholds = [0.5]
 thresholds = [cfg.TEST.DIOU_THRESHOLD]
@@ -689,7 +692,7 @@ for thresh1 in thresholds:
 
             for pred in [os.path.basename(f).replace(".txt","") for f in ground_truth_files_list]:
                 print("dfd")
-                path_image_performance = join(os.path.curdir, "mAP", "PredictedImagePerformance")
+                path_image_performance = join(os.path.curdir, args.output,"mAP", "PredictedImagePerformance"+"_"+cfg.TEST.IntersectionMethod)
 
                 if not os.path.exists(path_image_performance):
                     os.makedirs(path_image_performance)
