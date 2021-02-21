@@ -15,15 +15,9 @@ from os.path import join
 
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+#--weights "prova" \ -m "iou"
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-w', '--weights',  type=str,help="weights path")
-parser.add_argument('-m', '--method',required=True,type=str,  help="diou or iou")
-
-args = parser.parse_args()
-
-
-flags.DEFINE_string('weights', args.weights,
+flags.DEFINE_string('weights', "sds",
                     'path to weights file')
 flags.DEFINE_string('framework', 'tf', 'select model type in (tf, tflite)'
                     'path to weights file')
@@ -32,10 +26,21 @@ flags.DEFINE_boolean('tiny', False, 'yolov3 or yolov3-tiny')
 flags.DEFINE_integer('size', 608, 'resize images to')
 flags.DEFINE_string('annotation_path', cfg.TEST.ANNOT_PATH, 'annotation path')
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
+flags.DEFINE_string('intersectionMethod', "iou", 'write image path')
 #flags.DEFINE_float('thresh', 0.0, 'write image path')
 
 one_class=cfg.TEST.Oneclass
 print_image=cfg.TEST.PrintImage
+
+"""
+parser = argparse.ArgumentParser()
+parser.add_argument('-w', '--weights',  default="none",type=str,help="weights path")
+parser.add_argument('-m','--intersectionMethod', default="none",type=str,  help="diou or iou")
+
+args, unknown = parser.parse_known_args()
+"""
+
+
 
 def main(_argv):
     #cfg.TEST.SCORE_THRESHOLD=FLAGS.thresh

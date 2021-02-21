@@ -24,7 +24,7 @@ from ciou import computeDiou
 # IntersectionMethod="iou"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-na', '--no-animation', default=True, help="no animation is shown.", action="store_true")
+parser.add_argument('-na', '--no-animation', default=False, help="no animation is shown.", action="store_true")
 parser.add_argument('-np', '--no-plot', help="no plot is shown.", action="store_true")
 parser.add_argument('-q', '--quiet', help="minimalistic console output.", action="store_true")
 # argparse receiving list of classes to be ignored
