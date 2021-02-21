@@ -32,7 +32,7 @@ parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list o
 parser.add_argument('-o', '--output', default="results_no_opencv_no_web_view", type=str, help="output path name")
 # argparse receiving list of classes with specific IoU
 parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
-parser.add_argument('-m', '--intersectionMethod',  help="diou or iou", action="store_true")
+parser.add_argument('-m', '--intersectionMethod',  type=str, help="diou or iou")
 args = parser.parse_args()
 
 IntersectionMethod = args.intersectionMethod
