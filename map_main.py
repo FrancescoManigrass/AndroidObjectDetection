@@ -43,7 +43,7 @@ first_path = args.output
 one_class = True
 #255,0,0 red
 # green 47,255,173
-colors={"fp":(0,0,255),"tp":(47,255,173),"tn":(72,61,139),"fn":(0,0,0)}
+colors={"fp":(0,0,255),"tp":(47,255,173),"tn":(72,61,139),"fn":(255,0,0)}
 
 for thresh1 in thresholds:
     MINOVERLAP=thresh1
@@ -521,8 +521,14 @@ for thresh1 in thresholds:
             fp = [0] * nd
             tp_bb=[]
             fp_bb=[]
+
+            bb_matched=[]
+
+
+            file_id=""
             for idx, prediction in enumerate(predictions_data):
                 file_id = prediction["file_id"]
+                fn_list=[]
 
                 if show_animation:
                     # find ground truth image
@@ -550,9 +556,14 @@ for thresh1 in thresholds:
                 #   open ground-truth with that file_id
                 gt_file = tmp_files_path + "/" + file_id + "_ground_truth.json"
                 ground_truth_data = json.load(open(gt_file))
+                for f in ground_truth_data:
+                    f["file_id"]=file_id
+
                 ovmax = -1
                 gt_match = -1
                 ovmin = sys.maxsize
+
+
 
                 # load prediction bounding-box
                 bb = [float(x) for x in prediction["bbox"].split()]
@@ -573,12 +584,15 @@ for thresh1 in thresholds:
                                 if ov > ovmax:
                                     ovmax = ov
                                     gt_match = obj
+
                             elif IntersectionMethod == "diou":
                                 ov = float(computeDiou(bb, bbgt))
                                 if ov >= ovmax:
                                     ovmax = ov
                                     gt_match = obj
+
                 else:
+
                     for obj in ground_truth_data:
                         # look for a class_name match
                         if obj["class_name"] == class_name:
@@ -609,7 +623,12 @@ for thresh1 in thresholds:
                         if not bool(gt_match["used"]):
                             # true positive
                             tp[idx] = 1
+
                             gt_match["used"] = True
+                            gt_match["file_id"]=file_id
+                            bb_matched.append(gt_match)
+
+
                             count_true_positives[class_name] += 1
                             tp_bb.append(predictions_data[idx])
                             # update the ".json" file
@@ -632,9 +651,13 @@ for thresh1 in thresholds:
 
 
 
+
+
+
                 """
          Draw image to show animation
         """
+
                 if show_animation:
                     height, widht = img.shape[:2]
                     # colors (OpenCV works with BGR)
@@ -690,6 +713,11 @@ for thresh1 in thresholds:
                     # save the image with all the objects drawn to it
                     #cv2.imwrite(img_cumulative_path, img_cumulative)
 
+
+
+
+
+
             for pred in [os.path.basename(f).replace(".txt","") for f in ground_truth_files_list]:
                 print("dfd")
                 path_image_performance = join(os.path.curdir, args.output,"mAP", "PredictedImagePerformance"+"_"+cfg.TEST.IntersectionMethod)
@@ -705,6 +733,13 @@ for thresh1 in thresholds:
                 for bb1 in [tp2['bbox'] for tp2 in fp_bb if tp2['file_id']==pred]:
                     bb2 = [float(x) for x in bb1.split()]
                     cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])), (int(bb2[2]), int(bb2[3])), colors['fp'], 2)
+
+                gt_file = tmp_files_path + "/" + pred + "_ground_truth.json"
+                ground_truth_data = json.load(open(gt_file))
+                list_fn_dict=[ f1 for f1 in ground_truth_data if f1 not in [f for f in bb_matched if f['file_id']==pred] ]
+                for bb1 in [tp2['bbox'] for tp2 in list_fn_dict]:
+                    bb2 = [float(x) for x in bb1.split()]
+                    cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])), (int(bb2[2]), int(bb2[3])), colors['fn'], 2)
 
                 cv2.imwrite(join(path_image_performance,pred+".jpg"),img_performance)
 
