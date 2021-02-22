@@ -16,9 +16,9 @@ import cv2
 from matplotlib import pyplot
 from sklearn.metrics import precision_recall_curve
 
-from ciou import computeDiou
+from ciou import computeDiou, computerIOU
 
- # default value (defined in the PASCAL VOC2012 challenge)
+# default value (defined in the PASCAL VOC2012 challenge)
 #MaxCentroideDistance = cfg.TEST.MaxCentroideDistance
 
 # IntersectionMethod="iou"
@@ -381,6 +381,7 @@ for thresh1 in thresholds:
                                   (255, 0, 0), 2)
                     """
 
+
             except ValueError:
                 error_msg = "Error: File " + txt_file + " in the wrong format.\n"
                 error_msg += " Expected: <class_name> <left> <top> <right> <bottom> ['difficult']\n"
@@ -562,6 +563,7 @@ for thresh1 in thresholds:
                 ovmax = -1
                 gt_match = -1
                 ovmin = sys.maxsize
+                pred_match=None
 
 
 
@@ -581,15 +583,34 @@ for thresh1 in thresholds:
                                                                                   + 1) * (
                                              bbgt[3] - bbgt[1] + 1) - iw * ih
                                 ov = iw * ih / ua
+                                ov = computerIOU(bi,bbgt)
                                 if ov > ovmax:
                                     ovmax = ov
                                     gt_match = obj
+                                    pred_match=prediction
+                                    """
+                                    if gt_match["bbox"]=="587 1105 852 1371":
+                                        bb2=[float(f) for f in gt_match["bbox"].split()]
+                                        bb3=[float(f) for f in pred_match["bbox"].split()]
+                                        print("defdd")
+                                        img_performance = cv2.imread("data/obj/combined/" + gt_match["file_id"] + ".jpg")
+
+                                        cv2.rectangle(img_performance, (int(bb2[0]), int(bb2[1])),
+                                                      (int(bb2[2]), int(bb2[3])), colors['fp'], 5)
+
+                                        cv2.rectangle(img_performance, (int(bb3[0]), int(bb3[1])),
+                                                      (int(bb3[2]), int(bb3[3])), colors['tp'], 5)
+                                        cv2.imshow("prova",img_performance)
+                                        cv2.waitKey()
+                                    """
+
 
                             elif IntersectionMethod == "diou":
                                 ov = float(computeDiou(bb, bbgt))
                                 if ov >= ovmax:
                                     ovmax = ov
                                     gt_match = obj
+                                    pred_match = prediction
 
                 else:
 
@@ -623,12 +644,9 @@ for thresh1 in thresholds:
                         if not bool(gt_match["used"]):
                             # true positive
                             tp[idx] = 1
-
                             gt_match["used"] = True
                             gt_match["file_id"]=file_id
                             bb_matched.append(gt_match)
-
-
                             count_true_positives[class_name] += 1
                             tp_bb.append(predictions_data[idx])
                             # update the ".json" file

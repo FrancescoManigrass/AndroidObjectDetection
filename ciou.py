@@ -73,6 +73,45 @@ def compute_ciou(target,  output):
     return ciouk
 
 
+def computerIOU(target,output):
+    target = (target) * (target != 0)
+    output = (output) * (target != 0)
+
+    x1g, y1g, x2g, y2g = target[0], target[1], target[2], target[3]
+    x1, y1, x2, y2 = output[0], output[1], output[2], output[3]
+
+    w_pred = x2 - x1
+    h_pred = y2 - y1
+    w_gt = x2g - x1g
+    h_gt = y2g - y1g
+
+    x_center = (x2 + x1) / 2
+    y_center = (y2 + y1) / 2
+    x_center_g = (x1g + x2g) / 2
+    y_center_g = (y1g + y2g) / 2
+
+    xc1 = tf.minimum(x1, x1g)
+    yc1 = tf.minimum(y1, y1g)
+    xc2 = tf.maximum(x2, x2g)
+    yc2 = tf.maximum(y2, y2g)
+
+    ###iou term###
+    xA = tf.maximum(x1g, x1)
+    yA = tf.maximum(y1g, y1)
+    xB = tf.minimum(x2g, x2)
+    yB = tf.minimum(y2g, y2)
+
+    interArea = tf.maximum(0.0, (xB - xA + 1)) * tf.maximum(0.0, yB - yA + 1)
+
+    boxAArea = (x2g - x1g + 1) * (y2g - y1g + 1)
+    boxBArea = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+    iouk = interArea / (boxAArea + boxBArea - interArea + 1e-10)
+
+
+    return iouk
+
+
 def computeDiou(target,  output):
     '''
     takes in a list of bounding boxes
