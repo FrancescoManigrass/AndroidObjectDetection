@@ -1,6 +1,6 @@
 import argparse
 
-from absl import app, flags, logging
+from absl import flags, app
 from absl.flags import FLAGS
 import cv2
 import os
@@ -17,13 +17,8 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 #--weights "prova" \ -m "iou"
 
-flags.DEFINE_string('weights', "sds",
-                    'path to weights file')
-flags.DEFINE_string('framework', 'tf', 'select model type in (tf, tflite)'
-                    'path to weights file')
-flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
-flags.DEFINE_boolean('tiny', False, 'yolov3 or yolov3-tiny')
-flags.DEFINE_integer('size', 608, 'resize images to')
+
+
 flags.DEFINE_string('annotation_path', cfg.TEST.ANNOT_PATH, 'annotation path')
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 flags.DEFINE_string('intersectionMethod', "iou", 'write image path')
@@ -132,7 +127,7 @@ def main(_argv):
             else:
                 bboxes_gt, classes_gt = bbox_data_gt[:, :4], bbox_data_gt[:, 4]
             ground_truth_path = os.path.join(ground_truth_dir_path, str(image_name.split(".")[-2]) + '.txt')
-            print('=> ground truth of %s:' % image_name)
+            #print('=> ground truth of %s:' % image_name)
             num_bbox_gt = len(bboxes_gt)
             with open(ground_truth_path, 'w') as f:
                 for i in range(num_bbox_gt):
@@ -140,8 +135,8 @@ def main(_argv):
                     xmin, ymin, xmax, ymax = list(map(str, bboxes_gt[i]))
                     bbox_mess = ' '.join([class_name, xmin, ymin, xmax, ymax]) + '\n'
                     f.write(bbox_mess)
-                    print('\t' + str(bbox_mess).strip())
-            print('=> predict result of %s:' % image_name)
+                    #print('\t' + str(bbox_mess).strip())
+            #print('=> predict result of %s:' % image_name)
             predict_result_path = os.path.join(predicted_dir_path, str(image_name.split(".")[-2]) + '.txt')
             # Predict Process
             image_size = image.shape[:2]
@@ -190,8 +185,9 @@ def main(_argv):
                     xmin, ymin, xmax, ymax = list(map(str, coor))
                     bbox_mess = ' '.join([class_name, score, xmin, ymin, xmax, ymax]) + '\n'
                     f.write(bbox_mess)
-                    print('\t' + str(bbox_mess).strip())
-            print(num, num_lines)
+                    #print('\t' + str(bbox_mess).strip())
+            if num%100==0:
+                print(num, num_lines)
 
 
 def read_annotation(file):
@@ -199,10 +195,14 @@ def read_annotation(file):
         for  line in enumerate(annotation_file):
             print("dfdf")
 
-def get_bb_list(image_path):
-    image = np.array(cv2.imread(join(image_path.replace("\n",""))))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    height, width, channels = image.shape
+def get_bb_list(image_path,training=False):
+    if   "combined" not in image_path:
+        image = np.array(cv2.imread(join(image_path.replace("\n",""))))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        height, width, channels = image.shape
+    else:
+        height=2560
+        width=1440
     list_bb = []
     with open(image_path.replace(".jpg", ".txt").replace("\n",""), 'r') as f:
         for L in f.readlines():
@@ -218,7 +218,10 @@ def get_bb_list(image_path):
             x2 = int(centerx + (width_bb / 2))
             y1 = int(centery - (height_bb / 2))
             y2 = int(centery + (height_bb / 2))
-            str = ",".join([x1.__str__(), y1.__str__(), x2.__str__(), y2.__str__(), label.__str__()])
+            if not training:
+                str = ",".join([x1.__str__(), y1.__str__(), x2.__str__(), y2.__str__(), label.__str__()])
+            else:
+                str=image_path.replace(".txt",".jpg").replace("\n","")+" "+",".join([x1.__str__(), y1.__str__(), x2.__str__(), y2.__str__(), label.__str__()])
             list_bb.append(str)
     return list_bb
 

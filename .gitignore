@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/data/
+checkpoints/
+mAP/
+no_opencv_iou/
+*.rar
+*.pkl

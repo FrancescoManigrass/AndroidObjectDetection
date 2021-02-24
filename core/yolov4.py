@@ -193,31 +193,7 @@ def bbox_iou(boxes1, boxes2):
 
     return 1.0 * inter_area / union_area
 
-def bbox_ciou(boxes1, boxes2):
-    boxes1_coor = tf.concat([boxes1[..., :2] - boxes1[..., 2:] * 0.5,
-                        boxes1[..., :2] + boxes1[..., 2:] * 0.5], axis=-1)
-    boxes2_coor = tf.concat([boxes2[..., :2] - boxes2[..., 2:] * 0.5,
-                        boxes2[..., :2] + boxes2[..., 2:] * 0.5], axis=-1)
 
-    left = tf.maximum(boxes1_coor[..., 0], boxes2_coor[..., 0])
-    up = tf.maximum(boxes1_coor[..., 1], boxes2_coor[..., 1])
-    right = tf.maximum(boxes1_coor[..., 2], boxes2_coor[..., 2])
-    down = tf.maximum(boxes1_coor[..., 3], boxes2_coor[..., 3])
-
-    c = (right - left) * (right - left) + (up - down) * (up - down)
-    iou = bbox_iou(boxes1, boxes2)
-
-    u = (boxes1[..., 0] - boxes2[..., 0]) * (boxes1[..., 0] - boxes2[..., 0]) + (boxes1[..., 1] - boxes2[..., 1]) * (boxes1[..., 1] - boxes2[..., 1])
-    d = u / c
-
-    ar_gt = boxes2[..., 2] / boxes2[..., 3]
-    ar_pred = boxes1[..., 2] / boxes1[..., 3]
-
-    ar_loss = 4 / (np.pi * np.pi) * (tf.atan(ar_gt) - tf.atan(ar_pred)) * (tf.atan(ar_gt) - tf.atan(ar_pred))
-    alpha = ar_loss / (1 - iou + ar_loss + 0.000001)
-    ciou_term = d + alpha * ar_loss
-
-    return iou - ciou_term
 
 def bbox_giou(boxes1, boxes2):
 
@@ -267,14 +243,14 @@ def compute_loss(pred, conv, label, bboxes, STRIDES, NUM_CLASS, IOU_LOSS_THRESH,
     respond_bbox  = label[:, :, :, :, 4:5]
     label_prob    = label[:, :, :, :, 5:]
 
-    giou = tf.expand_dims(bbox_giou(pred_xywh, label_xywh), axis=-1)
+    ciou = tf.expand_dims(utils.bbox_ciou(pred_xywh, label_xywh), axis=-1)
     input_size = tf.cast(input_size, tf.float32)
 
     bbox_loss_scale = 2.0 - 1.0 * label_xywh[:, :, :, :, 2:3] * label_xywh[:, :, :, :, 3:4] / (input_size ** 2)
-    giou_loss = respond_bbox * bbox_loss_scale * (1- giou)
+    ciou_loss = respond_bbox * bbox_loss_scale * (1- ciou)
 
-    iou = bbox_iou(pred_xywh[:, :, :, :, np.newaxis, :], bboxes[:, np.newaxis, np.newaxis, np.newaxis, :, :])
-    max_iou = tf.expand_dims(tf.reduce_max(iou, axis=-1), axis=-1)
+    #iou = bbox_iou(pred_xywh[:, :, :, :, np.newaxis, :], bboxes[:, np.newaxis, np.newaxis, np.newaxis, :, :])
+    max_iou = tf.expand_dims(tf.reduce_max(ciou, axis=-1), axis=-1)
 
     respond_bgd = (1.0 - respond_bbox) * tf.cast( max_iou < IOU_LOSS_THRESH, tf.float32 )
 
@@ -288,13 +264,35 @@ def compute_loss(pred, conv, label, bboxes, STRIDES, NUM_CLASS, IOU_LOSS_THRESH,
 
     prob_loss = respond_bbox * tf.nn.sigmoid_cross_entropy_with_logits(labels=label_prob, logits=conv_raw_prob)
 
-    giou_loss = tf.reduce_mean(tf.reduce_sum(giou_loss, axis=[1,2,3,4]))
+    ciou_loss = tf.reduce_mean(tf.reduce_sum(ciou_loss, axis=[1,2,3,4]))
     conf_loss = tf.reduce_mean(tf.reduce_sum(conf_loss, axis=[1,2,3,4]))
     prob_loss = tf.reduce_mean(tf.reduce_sum(prob_loss, axis=[1,2,3,4]))
 
-    return giou_loss, conf_loss, prob_loss
+    return ciou_loss, conf_loss, prob_loss
 
+def filter_boxes(box_xywh, scores, score_threshold=0.4, input_shape = tf.constant([416,416])):
+    scores_max = tf.math.reduce_max(scores, axis=-1)
 
+    mask = scores_max >= score_threshold
+    class_boxes = tf.boolean_mask(box_xywh, mask)
+    pred_conf = tf.boolean_mask(scores, mask)
+    class_boxes = tf.reshape(class_boxes, [tf.shape(scores)[0], -1, tf.shape(class_boxes)[-1]])
+    pred_conf = tf.reshape(pred_conf, [tf.shape(scores)[0], -1, tf.shape(pred_conf)[-1]])
 
+    box_xy, box_wh = tf.split(class_boxes, (2, 2), axis=-1)
 
+    input_shape = tf.cast(input_shape, dtype=tf.float32)
 
+    box_yx = box_xy[..., ::-1]
+    box_hw = box_wh[..., ::-1]
+
+    box_mins = (box_yx - (box_hw / 2.)) / input_shape
+    box_maxes = (box_yx + (box_hw / 2.)) / input_shape
+    boxes = tf.concat([
+        box_mins[..., 0:1],  # y_min
+        box_mins[..., 1:2],  # x_min
+        box_maxes[..., 0:1],  # y_max
+        box_maxes[..., 1:2]  # x_max
+    ], axis=-1)
+    # return tf.concat([boxes, pred_conf], axis=-1)
+    return (boxes, pred_conf)

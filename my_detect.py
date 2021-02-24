@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 
 flags.DEFINE_string('framework', 'tf', '(tf, tflite')
-flags.DEFINE_string('weights', 'yolov4-obj_44000.weights',
+flags.DEFINE_string('weights', 'data/yolov4-obj_44000.weights',
                     'path to weights file')
 flags.DEFINE_integer('size', 608, 'resize images to')
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
@@ -35,9 +35,9 @@ def main(_argv):
     XYSCALE = cfg.YOLO.XYSCALE
     input_size = FLAGS.size
     image_path = FLAGS.image
-    PATH_rico = "data\\VALIDATIONCORRECT\\data"
+    PATH_rico = "data\\dataset\\obj\\combined"
     list_jpg_file = [os.path.join(dp, f) for dp, dn, filenames in os.walk(PATH_rico) for f in filenames if
-                     os.path.splitext(f)[1] == '.jpg']
+                     os.path.splitext(f)[1] == '.jpg' and "combined" in os.path.join(dp, f) ]
     input_layer = tf.keras.layers.Input([input_size, input_size, 3])
 
     if FLAGS.tiny:
@@ -67,7 +67,9 @@ def main(_argv):
             utils.load_weights(model, FLAGS.weights)
 
     for image_path in list_jpg_file:
-        print(image_path)
+        if list_jpg_file.index(image_path)%1000==0:
+            print(list_jpg_file.index(image_path).__str__()+" on " +len(list_jpg_file).__str__())
+
 
         original_image = cv2.imread(image_path)
         original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
@@ -86,15 +88,40 @@ def main(_argv):
         else:
             pred_bbox = utils.postprocess_bbbox(pred_bbox, ANCHORS, STRIDES)
         bboxes = utils.postprocess_boxes(pred_bbox, original_image_size, input_size, cfg.TEST.SCORE_THRESHOLD)
-        bboxes = utils.nms(bboxes, cfg.TEST.NMS_THRESHOLD, method='nms')
+        bboxes = utils.nms(bboxes, cfg.TEST.IOU_NMS_THRESHOLD, method='nms')
 
+        with open(image_path.replace(".jpg",".txt"), "w") as file1:
+            # Writing data to a file
+
+
+            for f in bboxes:
+                width=1440
+                height=2560
+                x_min=float(f[0])
+                y_min=float(f[1])
+                x_max=float(f[2])
+                y_max=float(f[3])
+                index_class=int(f[5])
+
+                width_bb=(x_max-x_min)
+                height_bb=(y_max - y_min)
+                elem1= ((width_bb/2)+ x_min)/width
+                elem2 = ((height_bb/2)+ y_min)/height
+                elem3= width_bb/width
+                elem4=height_bb/height
+                file1.write(index_class.__str__()+" "+elem1.__str__()+" "+elem2.__str__()+" "+elem3.__str__()+" "+elem4.__str__()+ "\n")
+
+        """
         image = utils.draw_bbox(original_image, bboxes)
         image = Image.fromarray(image)
         #image.show()
         image = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
         if not os.path.exists(FLAGS.output):
             os.makedirs(FLAGS.output)
-        cv2.imwrite(join(FLAGS.output,os.path.basename(image_path)), image)
+        cv2.imshow("prova",image)
+        cv2.waitKey()
+        #cv2.imwrite(join(FLAGS.output,os.path.basename(image_path)), image)
+        """
 
 if __name__ == '__main__':
     try:

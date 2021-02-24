@@ -20,7 +20,6 @@ import core.utils as utils
 from core.config import cfg
 
 
-
 class Dataset(object):
     """implement Dataset here"""
     def __init__(self, dataset_type):
@@ -44,9 +43,18 @@ class Dataset(object):
 
 
     def load_annotations(self, dataset_type):
+        annotations_txt=[]
         with open(self.annot_path, 'r') as f:
             txt = f.readlines()
-            annotations = [line.strip() for line in txt if len(line.strip().split()[1:]) != 0]
+            #annotations = [line.strip() for line in txt if len(line.strip().split()[1:]) != 0]
+            for t in txt[:10]:
+
+                annotations_txt.append(get_bb_list(t,training=True))
+
+            annotations = [line.strip() for line in annotations_txt if len(line.strip().split()[1:]) != 0]
+
+
+
         np.random.shuffle(annotations)
         return annotations
 
@@ -260,6 +268,36 @@ class Dataset(object):
 
     def __len__(self):
         return self.num_batchs
+
+def get_bb_list(image_path, training=False):
+    if "combined" not in image_path:
+        image = np.array(cv2.imread(join(image_path.replace("\n", ""))))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        height, width, channels = image.shape
+    else:
+        height = 2560
+        width = 1440
+    list_bb = []
+    with open(image_path.replace(".jpg", ".txt").replace("\n", ""), 'r') as f:
+        str = image_path.replace(".txt", ".jpg").replace("\n", "")
+        for L in f.readlines():
+            str+=" "
+            row = L.replace("\n", "").split(" ")
+            label = row[0]
+
+            centerx = float(row[1]) * width
+            centery = float(row[2]) * height
+            width_bb = float(row[3]) * width
+            height_bb = float(row[4]) * height
+            x1 = int(centerx - (width_bb / 2))
+            x2 = int(centerx + (width_bb / 2))
+            y1 = int(centery - (height_bb / 2))
+            y2 = int(centery + (height_bb / 2))
+
+            str += ",".join([x1.__str__(), y1.__str__(), x2.__str__(), y2.__str__(), label.__str__()])
+
+
+    return str
 
 
 

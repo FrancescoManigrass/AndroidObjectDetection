@@ -579,10 +579,13 @@ for thresh1 in thresholds:
                             ih = bi[3] - bi[1] + 1
                             if IntersectionMethod == "iou":
                                 # compute overlap (IoU) = area of intersection / area of union
+                                """
                                 ua = (bb[2] - bb[0] + 1) * (bb[3] - bb[1] + 1) + (bbgt[2] - bbgt[0]
                                                                                   + 1) * (
                                              bbgt[3] - bbgt[1] + 1) - iw * ih
+                               
                                 ov = iw * ih / ua
+                                """
                                 ov = computerIOU(bi,bbgt)
                                 if ov > ovmax:
                                     ovmax = ov
@@ -738,7 +741,7 @@ for thresh1 in thresholds:
 
             for pred in [os.path.basename(f).replace(".txt","") for f in ground_truth_files_list]:
                 print("dfd")
-                path_image_performance = join(os.path.curdir, args.output,"mAP", "PredictedImagePerformance"+"_"+cfg.TEST.IntersectionMethod)
+                path_image_performance = join(os.path.curdir, args.output,"mAP", "PredictedImagePerformance"+"_"+IntersectionMethod)
 
                 if not os.path.exists(path_image_performance):
                     os.makedirs(path_image_performance)

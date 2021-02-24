@@ -10,8 +10,9 @@ import numpy as np
 from core import utils
 from core.utils import freeze_all, unfreeze_all
 
+
 flags.DEFINE_string('model', 'yolov4', 'yolov4, yolov3 or yolov3-tiny')
-flags.DEFINE_string('weights', './data/yolov4.weights', 'pretrained weights')
+flags.DEFINE_string('weights', './data/yolov4-obj_26000.weights', 'pretrained weights')
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 
 def main(_argv):
@@ -87,23 +88,23 @@ def main(_argv):
     def train_step(image_data, target):
         with tf.GradientTape() as tape:
             pred_result = model(image_data, training=True)
-            giou_loss = conf_loss = prob_loss = 0
+            ciou_loss = conf_loss = prob_loss = 0
 
             # optimizing process
             for i in range(3):
                 conv, pred = pred_result[i * 2], pred_result[i * 2 + 1]
                 loss_items = compute_loss(pred, conv, target[i][0], target[i][1], STRIDES=STRIDES, NUM_CLASS=NUM_CLASS, IOU_LOSS_THRESH=IOU_LOSS_THRESH, i=i)
-                giou_loss += loss_items[0]
+                ciou_loss += loss_items[0]
                 conf_loss += loss_items[1]
                 prob_loss += loss_items[2]
 
-            total_loss = giou_loss + conf_loss + prob_loss
+            total_loss = ciou_loss + conf_loss + prob_loss
 
             gradients = tape.gradient(total_loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-            tf.print("=> STEP %4d   lr: %.6f   giou_loss: %4.2f   conf_loss: %4.2f   "
+            tf.print("=> STEP %4d   lr: %.6f   ciou_loss: %4.2f   conf_loss: %4.2f   "
                      "prob_loss: %4.2f   total_loss: %4.2f" % (global_steps, optimizer.lr.numpy(),
-                                                               giou_loss, conf_loss,
+                                                               ciou_loss, conf_loss,
                                                                prob_loss, total_loss))
             # update learning rate
             global_steps.assign_add(1)
@@ -119,27 +120,27 @@ def main(_argv):
             with writer.as_default():
                 tf.summary.scalar("lr", optimizer.lr, step=global_steps)
                 tf.summary.scalar("loss/total_loss", total_loss, step=global_steps)
-                tf.summary.scalar("loss/giou_loss", giou_loss, step=global_steps)
+                tf.summary.scalar("loss/ciou_loss", ciou_loss, step=global_steps)
                 tf.summary.scalar("loss/conf_loss", conf_loss, step=global_steps)
                 tf.summary.scalar("loss/prob_loss", prob_loss, step=global_steps)
             writer.flush()
     def test_step(image_data, target):
         with tf.GradientTape() as tape:
             pred_result = model(image_data, training=True)
-            giou_loss = conf_loss = prob_loss = 0
+            ciou_loss = conf_loss = prob_loss = 0
 
             # optimizing process
             for i in range(3):
                 conv, pred = pred_result[i * 2], pred_result[i * 2 + 1]
                 loss_items = compute_loss(pred, conv, target[i][0], target[i][1], STRIDES=STRIDES, NUM_CLASS=NUM_CLASS, IOU_LOSS_THRESH=IOU_LOSS_THRESH, i=i)
-                giou_loss += loss_items[0]
+                ciou_loss += loss_items[0]
                 conf_loss += loss_items[1]
                 prob_loss += loss_items[2]
 
-            total_loss = giou_loss + conf_loss + prob_loss
+            total_loss = ciou_loss + conf_loss + prob_loss
 
-            tf.print("=> TEST STEP %4d   giou_loss: %4.2f   conf_loss: %4.2f   "
-                     "prob_loss: %4.2f   total_loss: %4.2f" % (global_steps, giou_loss, conf_loss,
+            tf.print("=> TEST STEP %4d   ciou_loss: %4.2f   conf_loss: %4.2f   "
+                     "prob_loss: %4.2f   total_loss: %4.2f" % (global_steps, ciou_loss, conf_loss,
                                                                prob_loss, total_loss))
 
     for epoch in range(first_stage_epochs + second_stage_epochs):
@@ -160,6 +161,7 @@ def main(_argv):
         for image_data, target in testset:
             test_step(image_data, target)
         model.save_weights("./checkpoints/yolov4")
+        print("Training ended")
 
 if __name__ == '__main__':
     try:

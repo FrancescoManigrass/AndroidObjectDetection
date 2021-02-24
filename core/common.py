@@ -39,7 +39,7 @@ def convolutional(input_layer, filters_shape, downsample=False, activate=True, b
             # conv = softplus(conv)
             # conv = conv * tf.math.tanh(tf.math.softplus(conv))
             # conv = conv * tf.tanh(softplus(conv))
-            # conv = tf.nn.leaky_relu(conv, alpha=0.1)
+            #conv = tf.nn.leaky_relu(conv, alpha=0.1)
             # conv = tfa.activations.mish(conv)
             # conv = conv * tf.nn.tanh(tf.keras.activations.relu(tf.nn.softplus(conv), max_value=20))
             # conv = tf.nn.softplus(conv)
@@ -59,8 +59,9 @@ def softplus(x, threshold = 20.):
     return tf.case([(tf.greater(x, tf.constant(threshold)), lambda:f1()), (tf.less(x, tf.constant(-threshold)), lambda:f2())], default=lambda:f3())
     # return tf.case([(tf.greater(x, threshold), lambda:f1())])
 def mish(x):
-    return tf.keras.layers.Lambda(lambda x: x*tf.tanh(tf.math.log(1+tf.exp(x))))(x)
-    # return tf.keras.layers.Lambda(lambda x: softplus(x))(x)
+    return x * tf.math.tanh(tf.math.softplus(x))
+    #return tf.keras.layers.Lambda(lambda x: x*tf.tanh(tf.math.log(1+tf.exp(x))))(x)
+    #return tf.keras.layers.Lambda(lambda x: softplus(x))(x)
     # return tf.keras.layers.Lambda(lambda x: x * tf.tanh(softplus(x)))(x)
 
 def residual_block(input_layer, input_channel, filter_num1, filter_num2, activate_type='leaky'):
