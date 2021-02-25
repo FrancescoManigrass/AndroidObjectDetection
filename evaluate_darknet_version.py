@@ -22,6 +22,11 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 flags.DEFINE_string('annotation_path', cfg.TEST.ANNOT_PATH, 'annotation path')
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 flags.DEFINE_string('intersectionMethod', "iou", 'write image path')
+flags.DEFINE_string('weights', "iou", 'write image path')
+flags.DEFINE_string('size','608', 'write image path')
+flags.DEFINE_string('model', 'yolov4', 'yolov4, yolov3 or yolov3-tiny')
+flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
+flags.DEFINE_string('framework', 'tf', '(tf, tflite')
 #flags.DEFINE_float('thresh', 0.0, 'write image path')
 
 one_class=cfg.TEST.Oneclass
@@ -40,7 +45,7 @@ args, unknown = parser.parse_known_args()
 def main(_argv):
     #cfg.TEST.SCORE_THRESHOLD=FLAGS.thresh
     print(cfg.TEST.SCORE_THRESHOLD.__str__())
-    INPUT_SIZE = FLAGS.size
+    INPUT_SIZE = int(FLAGS.size)
     #cfg.TEST.IntersectionMethod=args.method
     if FLAGS.tiny:
         STRIDES = np.array(cfg.YOLO.STRIDES_TINY)
@@ -71,7 +76,7 @@ def main(_argv):
 
     # Build Model
     if FLAGS.framework == 'tf':
-        input_layer = tf.keras.layers.Input([INPUT_SIZE, INPUT_SIZE, 3])
+        input_layer = tf.keras.layers.Input([int(INPUT_SIZE), int(INPUT_SIZE), 3])
         if FLAGS.tiny:
             feature_maps = YOLOv3_tiny(input_layer, NUM_CLASS)
             bbox_tensors = []

@@ -18,6 +18,8 @@ flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
 flags.DEFINE_string('image', 'Cattura.PNG', 'path to input image')
 flags.DEFINE_string('output', 'result.png', 'path to output image')
+ValidationPath="data/validation_subset.txt"
+
 
 def main(_argv):
     INPUT_SIZE = FLAGS.size

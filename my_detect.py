@@ -35,7 +35,7 @@ def main(_argv):
     XYSCALE = cfg.YOLO.XYSCALE
     input_size = FLAGS.size
     image_path = FLAGS.image
-    PATH_rico = "data\\dataset\\obj\\combined"
+    PATH_rico = "data\\obj\\combined"
     list_jpg_file = [os.path.join(dp, f) for dp, dn, filenames in os.walk(PATH_rico) for f in filenames if
                      os.path.splitext(f)[1] == '.jpg' and "combined" in os.path.join(dp, f) ]
     input_layer = tf.keras.layers.Input([input_size, input_size, 3])

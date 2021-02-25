@@ -45,7 +45,7 @@ __C.TRAIN.SECOND_STAGE_EPOCHS   = 30
 # TEST options
 __C.TEST                      = edict()
 
-__C.TEST.ANNOT_PATH           = "./data/valid.txt"
+__C.TEST.ANNOT_PATH           = "./data/validation_subset.txt"
 __C.TEST.BATCH_SIZE           = 1
 __C.TEST.INPUT_SIZE           = 608
 __C.TEST.DATA_AUG             = False
