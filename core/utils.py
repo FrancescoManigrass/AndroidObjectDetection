@@ -455,3 +455,15 @@ def load_config(FLAGS):
     NUM_CLASS = len(read_class_names(cfg.YOLO.CLASSES))
 
     return STRIDES, ANCHORS, NUM_CLASS, XYSCALE
+
+
+def get_center(bb):
+    bb = [float(f) for f in bb.split()]
+    return [bb[0]+(bb[2]-bb[0])/2,bb[1]+(bb[3]-bb[1])/2]
+
+def IsContained(bb,center):
+    bb=[float(f) for f in bb.split()]
+    if float(bb[0])<=center[0] <=float(bb[2]):
+        if float(bb[1]) <=center[1]<=float(bb[3]):
+            return True
+    return False
